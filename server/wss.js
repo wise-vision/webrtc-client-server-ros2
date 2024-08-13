@@ -48,52 +48,36 @@ function clearClient(wss, socket) {
 
 function onMessage(wss, socket, message) {
     debug(`onMessage ${message}`);
-    console.log(`onMessage ${message}`);
 
     const parsedMessage = JSON.parse(message)
     const type = parsedMessage.event
     const data = parsedMessage.data
-    // Logical socket ID
+    // Client socket ID
     let socketClientID = findClientID(clients, socket);
-    // console.log('Client Socket ID', socketClientID);
 
-    // Requested socket ID
+    // Target socket ID
     let socketID;
     if (parsedMessage.socketID) {
-        // console.log('SocketID in root');
         socketID = parsedMessage.socketID;
     }
     else {
-        // console.log('SocketID in data');
         socketID = data.socketID;
     }
-
-    // console.log('socketID', socketID);
-    // console.log('clientsID', clients.keys());
     
     switch (type) {
         case 'webrtc_msg': {
-            console.log('Sending webrtc_msg message from', socketClientID, 'to', socketID);
             let wsClient = clients.get(socketID);
             data['socketID'] = socketClientID;
 
-            if (wsClient)
+            if (wsClient) {
+                debug('Sending webrtc_msg message from', socketClientID, 'to', socketID);
                 send(wsClient, 'webrtc_msg', data);
-            else
-                console.error('Unable to sent, no socket found!')
-            break;
-            // socket.to(receivee).emit('webrtc_msg', from_id, msg);            
+            }
+            break;            
         }
         default:
             break;
     }
-
-    // // Send message back to all clients connected
-    // wss.clients.forEach(client => {
-    //     if (client !== socket && client.readyState === WebSocket.OPEN) {
-    //         client.send(message, { binary: isBinary });
-    //     }
-    // });
 }
 
 function onClose(wss, socket, message) {
