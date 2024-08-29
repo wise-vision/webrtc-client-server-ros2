@@ -9,16 +9,15 @@ const {Title, Paragraph} = Typography;
 const URL_WEB_SOCKET = 'ws://localhost:8090';
 let localStream;
 
-log.setLevel("DEBUG");
+// log.setLevel("DEBUG");
 
 function App() {
-  const [startButtonDisabled, setStartButtonDisabled] = useState(true);
-    const [joinButtonDisabled, setJoinButtonDisabled] = useState(true);
     const [callButtonDisabled, setCallButtonDisabled] = useState(true);
     const [hangupButtonDisabled, setHangupButtonDisabled] = useState(true);
     const [videoTagId, ] = useState('droneStreamOut');
     const [droneSocketID, setDroneSocketID] = useState('');
     const ws = useRef(null);
+    let socketSet = false;
 
     useEffect(() => {
         const wsClient = new WebSocket(URL_WEB_SOCKET);
@@ -26,7 +25,7 @@ function App() {
 
         wsClient.onopen = () => {
             log.debug('ws opened');
-            setStartButtonDisabled(false);
+            setCallButtonDisabled(false);
         };
 
         wsClient.onclose = () => log.debug('ws closed');
@@ -44,46 +43,20 @@ function App() {
     //     }));
     // };
 
-    const start = () => {
-        log.debug('start invoked');
-
-        setStartButtonDisabled(true);
-        setJoinButtonDisabled(false);
-
-        DroneStreamManager.setupSocketEvent(ws.current, droneSocketID);
-    };
-
-    const join = () => {
-        log.debug('join invoked');
-
+    const callOnClick = () => {
+        log.debug('callOnClick invoked');
         if (!droneSocketID) {
             log.error('droneSocketID is empty');
             alert('Drone Socket ID is empty');
             return;
         }
-
-        setJoinButtonDisabled(true);
-        setCallButtonDisabled(false);
-
-        // sendWsMessage('join', { isSource: false, socketID: droneId, peerSocketId: clientId });
-        localStream = DroneStreamManager.createDroneStream(droneSocketID, videoTagId)
-    };
-
-    const callOnClick = () => {
-        log.debug('callOnClick invoked');
-
+        if (!socketSet) {
+            DroneStreamManager.setupSocketEvent(ws.current, droneSocketID);
+            socketSet = true;
+        }
+        localStream = DroneStreamManager.createDroneStream(droneSocketID, videoTagId);
         setCallButtonDisabled(true);
         setHangupButtonDisabled(false);
-        // if (typeof(myVariable) != "undefined") {
-        //     if (localStream.getVideoTracks().length > 0) {
-        //         log.debug(`Using video device: ${localStream.getVideoTracks()[0].label}`);
-        //     }
-        //     if (localStream.getAudioTracks().length > 0) {
-        //         log.debug(`Using audio device: ${localStream.getAudioTracks()[0].label}`);
-        //     }
-        // }
-
-        
         localStream.startDroneStream();
     };
 
@@ -105,7 +78,7 @@ function App() {
                       setDroneSocketID(event.target.value);
                   }}
               />
-              <Button
+              {/* <Button
                   onClick={start}
                   style={{width: 240, marginTop: 16}}
                   type="primary"
@@ -120,14 +93,14 @@ function App() {
                   disabled={joinButtonDisabled}
               >
                   Join
-              </Button>
+              </Button> */}
               <Button
                   onClick={callOnClick}
                   style={{width: 240, marginTop: 16}}
                   type="primary"
                   disabled={callButtonDisabled}
               >
-                  Call
+                  Get streaming
               </Button>
               <Button
                   danger
