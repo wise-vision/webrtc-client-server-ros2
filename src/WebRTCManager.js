@@ -1,8 +1,7 @@
 const iceConfiguration = {
     iceServers: [
         {
-            // urls: 'stun:stun.l.google.com:19302'
-            urls: 'stun://192.168.1.220:8090'
+            urls: 'stun:stun.l.google.com:19302'
         }
     ]
 }
@@ -175,7 +174,7 @@ class DroneStream {
 
             console.log("Created RTCPeerConnection: " + this.peerConnection);
         } catch (e) {
-            console.log('Failed to create PeerConnection, exception: ' + e.message);
+            console.log('Failed to create PeerConnection, exception: ' + e.message + e);
         }
     }
 }

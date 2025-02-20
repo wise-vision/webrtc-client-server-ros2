@@ -26,6 +26,7 @@ function App() {
         wsClient.onopen = () => {
             log.debug('ws opened');
             setCallButtonDisabled(false);
+            setHangupButtonDisabled(true);
         };
 
         wsClient.onclose = () => log.debug('ws closed');
