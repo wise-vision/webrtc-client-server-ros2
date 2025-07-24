@@ -1,3 +1,5 @@
+import { ROS2ImageStreamer } from './ROS2ImageStreamer';
+
 const iceConfiguration = {
     iceServers: [
         {
@@ -57,6 +59,12 @@ export class DroneStreamManager {
         // This should trigger the connection state event on DroneStream
         console.log("Closing drone stream for " + droneID);
         let stream = this.getStreamByDroneID(droneID);
+        
+        // Stop ROS2 streaming if active
+        if (stream.ros2Streamer) {
+            stream.ros2Streamer.disconnect();
+        }
+        
         stream.peerConnection.close();
         delete this.ongoingStreams[droneID];
         stream.peerConnection = null;
@@ -73,6 +81,7 @@ class DroneStream {
     constructor(droneSocketID, srcID) {
         this.droneSocketID = droneSocketID;
         this.streamObj = document.getElementById(srcID);
+        this.ros2Streamer = null;
 
         this.createPeerConnection();
     }
@@ -116,7 +125,38 @@ class DroneStream {
 
     handleOnTrack(event) {
         this.streamObj.srcObject = event.streams[0];
+        
+        // Initialize ROS2 image streaming when video track is received
+        this.initializeROS2Streaming();
+        
         return false;
+    }
+
+    async initializeROS2Streaming() {
+        try {
+            // Wait a bit for the video element to be ready
+            setTimeout(async () => {
+                console.log('Initializing ROS2 image streaming...');
+                
+                this.ros2Streamer = new ROS2ImageStreamer(this.streamObj);
+                
+                try {
+                    await this.ros2Streamer.connect();
+                    console.log('Connected to ROS2 image publisher service');
+                    
+                    // Start streaming at 10 FPS
+                    this.ros2Streamer.startStreaming(10);
+                    console.log('Started ROS2 image streaming at 10 FPS');
+                    
+                } catch (error) {
+                    console.error('Failed to connect to ROS2 image publisher service:', error);
+                    console.warn('Make sure the ROS2 image publisher service is running (npm run ros2-publisher)');
+                }
+            }, 1000);
+            
+        } catch (error) {
+            console.error('Error initializing ROS2 streaming:', error);
+        }
     }
 
     handleOnConnectionStateChange(event) {
